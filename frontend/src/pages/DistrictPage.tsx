@@ -22,7 +22,7 @@ export default function DistrictPage() {
 
   useEffect(() => {
     if (id && id !== 'new') {
-       axios.get('http://localhost:8000/districts').then(res => {
+       axios.get('https://crisisgrid-backend.onrender.com/districts').then(res => {
           const matched = res.data.data.find((d: any) => d.id === id);
           if (matched) { setFormData(matched); if (id === 'demo-1') triggerAnalysis(matched); }
        }).catch(() => {});
