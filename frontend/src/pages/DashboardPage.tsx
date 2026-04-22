@@ -13,8 +13,8 @@ export default function DashboardPage() {
     const load = async () => {
       try {
         const [distRes, sumRes] = await Promise.all([
-          axios.get('http://localhost:8000/districts'),
-          axios.get('http://localhost:8000/dashboard-summary'),
+          axios.get('https://crisisgrid-backend.onrender.com/districts'),
+          axios.get('https://crisisgrid-backend.onrender.com/dashboard-summary'),
         ]);
         setDistricts(distRes.data.data);
         setSummary(sumRes.data);
