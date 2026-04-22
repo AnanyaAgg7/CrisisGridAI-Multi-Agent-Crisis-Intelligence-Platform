@@ -31,7 +31,7 @@ export default function SimulatorPage() {
     setError(null);
     
     try {
-      const res = await axios.post('http://localhost:8000/simulate-scenario', {
+      const res = await axios.post('https://crisisgrid-backend.onrender.com/simulate-scenario', {
         scenario_type: scenario.id,
         severity_multiplier: scenario.multiplier
       });
