@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldAlert, Loader2, AlertTriangle, Droplets, TrendingDown, Skull, Heart, Truck, Globe2, ListChecks, CheckCircle2, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
+import { ShieldAlert, Loader2, AlertTriangle, Droplets, TrendingDown, Skull, Heart, Truck, Globe2, CheckCircle2, RefreshCw, WifiOff } from 'lucide-react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
