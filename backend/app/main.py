@@ -11,6 +11,15 @@ from .mock_data import districts_mock
 from .agents import run_crisis_council, generate_scenario_summary, MODEL_NAME
 
 app = FastAPI(title="CrisisGrid AI: Multi-Agent Crisis Intelligence API")
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # for now allow all
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CORSMiddleware,
