@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { AlertCircle, FileText, ChevronRight, BarChart3, PieChart as PieChartIcon, Users, Activity, Shield } from 'lucide-react';
+import { AlertCircle, ChevronRight, BarChart3, PieChart as PieChartIcon, Users, Activity, Shield } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function DashboardPage() {
