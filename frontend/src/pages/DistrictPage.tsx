@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle2, ShieldAlert, FileText, Loader2, ListChecks, ChevronRight, TrendingUp, AlertTriangle, Truck, Users, Activity, Shield, RefreshCw, WifiOff } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, FileText, Loader2, ListChecks, ChevronRight, TrendingUp, AlertTriangle, Truck, Users, Activity, RefreshCw, WifiOff } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function DistrictPage() {
