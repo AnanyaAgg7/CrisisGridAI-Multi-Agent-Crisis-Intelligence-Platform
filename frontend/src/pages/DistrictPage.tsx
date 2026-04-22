@@ -32,7 +32,7 @@ export default function DistrictPage() {
   const triggerAnalysis = async (data: any) => {
     setLoading(true); setResult(null); setError(null);
     try {
-      const res = await axios.post('http://localhost:8000/analyze-district', data);
+      const res = await axios.post('https://crisisgrid-backend.onrender.com/analyze-district', data);
       setResult(res.data);
     } catch(err: any) {
       console.error(err);
