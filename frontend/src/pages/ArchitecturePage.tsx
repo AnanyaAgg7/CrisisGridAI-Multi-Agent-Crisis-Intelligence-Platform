@@ -1,62 +1,38 @@
-import { Database, Zap, Cpu, Network, FileCheck } from 'lucide-react';
+import { Database, Zap, Cpu, Network, FileCheck, Activity } from 'lucide-react';
+
+const STEPS = [
+  { icon: Database, title: '1. Input Data Processing', desc: 'Ingests district-level parameters (BPL ratio, hospital demand, flood status, stock levels). Validates via FastAPI Pydantic schema.', color: 'text-slate-400', bg: 'bg-white/3', border: 'border-white/8', iconBg: 'bg-white/5' },
+  { icon: Cpu, title: '2. Deterministic Scoring Engine', desc: 'Calculates normalized scores (0-100) for Equity (E), Logistics (L), Risk (R), and Demand (D) using rigid mathematical bounds to prevent LLM hallucinations.', color: 'text-cyan-400', bg: 'bg-cyan-500/5', border: 'border-cyan-500/15', iconBg: 'bg-cyan-500/10' },
+  { icon: Network, title: '3. Multi-Agent AI Debate', desc: 'Triggers a unified Gemini prompt simulating 4 independent agents. Each agent (Equity, Logistics, Risk, Demand) analyzes the localized data through their specialized policy lens.', color: 'text-indigo-400', bg: 'bg-indigo-500/5', border: 'border-indigo-500/15', iconBg: 'bg-indigo-500/10' },
+  { icon: Zap, title: '4. Moderator Decision Synthesis', desc: 'A Magistrate Agent reviews the 4 conflicting outputs alongside the deterministic bounds, synthesizing a final, accountable recommendation.', color: 'text-amber-400', bg: 'bg-amber-500/5', border: 'border-amber-500/15', iconBg: 'bg-amber-500/10' },
+  { icon: FileCheck, title: '5. District Priority Output', desc: 'Generates structured JSON containing Priority Band, Delivery Recommendation, and the audit trail of agent reasoning, rendered directly to the dashboard.', color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/15', iconBg: 'bg-emerald-500/10' },
+];
 
 export default function ArchitecturePage() {
   return (
-    <div className="p-8 pb-20 max-w-7xl mx-auto">
-      <header className="mb-10">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">System Architecture</h1>
-        <p className="text-slate-500 mt-1">Explainable AI pipeline separating mathematical priority bounds from LLM reasoning.</p>
+    <div className="p-8 pb-20 max-w-4xl mx-auto font-sans">
+      <header className="mb-10 border-b border-cyan-500/10 pb-6">
+        <h1 className="text-xl font-black text-white tracking-tight uppercase flex items-center gap-3">
+          <Activity className="w-5 h-5 text-cyan-400" /> System Architecture
+        </h1>
+        <p className="text-slate-500 mt-1 text-xs font-semibold uppercase tracking-wider">Explainable AI pipeline separating mathematical priority bounds from LLM reasoning.</p>
       </header>
 
-      <div className="flex flex-col items-center gap-8 relative">
-        <div className="absolute top-[10%] bottom-[10%] left-1/2 w-1 bg-slate-200 -translate-x-1/2 z-0" />
+      <div className="flex flex-col items-center gap-5 relative">
+        {/* Vertical connector line */}
+        <div className="absolute top-[40px] bottom-[40px] left-1/2 w-px bg-gradient-to-b from-cyan-500/20 via-indigo-500/15 to-emerald-500/20 -translate-x-1/2 z-0" />
 
-        {/* Step 1 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full max-w-2xl z-10 flex items-start gap-4 hover:border-blue-300 transition-colors">
-           <div className="bg-slate-100 p-3 rounded-full text-slate-600"><Database className="w-6 h-6" /></div>
-           <div>
-              <h3 className="font-bold text-slate-900 text-lg">1. Input Data Processing</h3>
-              <p className="text-sm text-slate-600 mt-1">Ingests district-level parameters (BPL ratio, hospital demand, flood status, stock levels). Validates via FastAPI Pydantic schema.</p>
-           </div>
-        </div>
-
-        {/* Step 2 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full max-w-2xl z-10 flex items-start gap-4 hover:border-blue-300 transition-colors">
-           <div className="bg-blue-50 p-3 rounded-full text-blue-600"><Cpu className="w-6 h-6" /></div>
-           <div>
-              <h3 className="font-bold text-slate-900 text-lg">2. Deterministic Scoring Engine</h3>
-              <p className="text-sm text-slate-600 mt-1">Calculates normalized scores (0-100) for Equity (E), Logistics (L), Risk (R), and Demand (D) using rigid mathematical bounds to prevent LLM hallucinations.</p>
-           </div>
-        </div>
-
-        {/* Step 3 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full max-w-2xl z-10 flex items-start gap-4 hover:border-indigo-300 transition-colors">
-           <div className="bg-indigo-50 p-3 rounded-full text-indigo-600"><Network className="w-6 h-6" /></div>
-           <div>
-              <h3 className="font-bold text-slate-900 text-lg">3. Multi-Agent AI Debate</h3>
-              <p className="text-sm text-slate-600 mt-1">Triggers 4 independent Gemini prompts concurrently. Each agent (Equity, Logistics, Risk, Demand) analyzes the localized data exclusively through their specialized policy lens.</p>
-           </div>
-        </div>
-
-        {/* Step 4 */}
-        <div className="bg-white p-6 rounded-xl border border-blue-300 shadow-md w-full max-w-2xl z-10 flex items-start gap-4 relative overflow-hidden">
-           <div className="absolute right-0 top-0 w-32 h-32 bg-blue-50 focus:blur-3xl rounded-full opacity-50 -z-10" />
-           <div className="bg-blue-600 p-3 rounded-full text-white"><Zap className="w-6 h-6" /></div>
-           <div>
-              <h3 className="font-bold text-slate-900 text-lg">4. Moderator Decision Synthesis</h3>
-              <p className="text-sm text-slate-600 mt-1">A final Magistrate Agent reviews the 4 conflicting outputs alongside the deterministic bounds, synthesizing a final, accountable recommendation.</p>
-           </div>
-        </div>
-
-        {/* Step 5 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full max-w-2xl z-10 flex items-start gap-4 hover:border-emerald-300 transition-colors">
-           <div className="bg-emerald-50 p-3 rounded-full text-emerald-600"><FileCheck className="w-6 h-6" /></div>
-           <div>
-              <h3 className="font-bold text-slate-900 text-lg">5. District Priority Output</h3>
-              <p className="text-sm text-slate-600 mt-1">Generates the structured JSON containing Priority Band, Delivery Recommendation, and the audit trail of agent reasoning, rendering it directly to the dashboard.</p>
-           </div>
-        </div>
-
+        {STEPS.map((step, i) => (
+          <div key={i} className={`${step.bg} p-6 rounded-xl border ${step.border} w-full z-10 flex items-start gap-4 hover:border-white/15 transition-all backdrop-blur-sm group`}>
+             <div className={`${step.iconBg} p-3 rounded-xl ${step.color} border border-white/5 group-hover:scale-110 transition-transform`}>
+               <step.icon className="w-6 h-6" />
+             </div>
+             <div>
+                <h3 className="font-black text-white text-sm uppercase tracking-wider mb-1.5">{step.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed font-medium">{step.desc}</p>
+             </div>
+          </div>
+        ))}
       </div>
     </div>
   )

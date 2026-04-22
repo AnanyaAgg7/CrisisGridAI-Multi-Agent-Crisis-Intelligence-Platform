@@ -6,14 +6,25 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 
 export default function DashboardPage() {
   const [districts, setDistricts] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-       axios.get('http://localhost:8000/districts')
-         .then(res => { setDistricts(res.data.data); setLoading(false); })
-         .catch(() => { setLoading(false); });
-    }, 600);
+    const load = async () => {
+      try {
+        const [distRes, sumRes] = await Promise.all([
+          axios.get('http://localhost:8000/districts'),
+          axios.get('http://localhost:8000/dashboard-summary'),
+        ]);
+        setDistricts(distRes.data.data);
+        setSummary(sumRes.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    setTimeout(load, 600);
   }, []);
 
   const barData = [
@@ -32,6 +43,10 @@ export default function DashboardPage() {
     { name: 'Audit', value: 2, color: '#64748b' }
   ];
 
+  const critCount = summary?.critical_count ?? '-';
+  const popStr = summary?.affected_population ?? '-';
+  const divFlags = summary?.diversion_flags ?? '-';
+
   return (
     <div className="p-8 pb-20 max-w-[1600px] mx-auto font-sans">
       <header className="mb-8 border-b border-cyan-500/10 pb-6 flex justify-between items-end">
@@ -49,10 +64,10 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
-          { title: 'Active Sectors', val: loading ? '-' : districts.length, icon: Activity, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/15' },
-          { title: 'Critical Alerts', val: loading ? '-' : '4', icon: AlertCircle, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/15' },
-          { title: 'Affected Population', val: loading ? '-' : '12.4M', icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/15' },
-          { title: 'Diversion Flags', val: loading ? '-' : '1', icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/15' },
+          { title: 'Active Sectors', val: loading ? '-' : (summary?.total_districts ?? districts.length), icon: Activity, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/15' },
+          { title: 'Critical Alerts', val: loading ? '-' : critCount, icon: AlertCircle, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/15' },
+          { title: 'Affected Population', val: loading ? '-' : popStr, icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/15' },
+          { title: 'Diversion Flags', val: loading ? '-' : divFlags, icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/15' },
         ].map((m, i) => (
           <div key={i} className="glass-card p-5 rounded-xl flex items-center justify-between group hover:border-white/10 transition-all">
              <div>

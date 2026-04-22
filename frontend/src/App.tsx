@@ -59,7 +59,7 @@ function Sidebar() {
       {/* Status */}
       <div className="p-4 border-t border-cyan-500/10 flex items-center gap-2">
          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50"></span>
-         <span className="text-[9px] font-bold text-cyan-700 uppercase tracking-[0.2em]">Gemini 1.5 • Live</span>
+         <span className="text-[9px] font-bold text-cyan-700 uppercase tracking-[0.2em]">Gemini 2.0 Flash • Live</span>
       </div>
     </div>
   );

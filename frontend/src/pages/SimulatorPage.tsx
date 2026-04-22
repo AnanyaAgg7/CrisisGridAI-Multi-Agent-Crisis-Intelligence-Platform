@@ -1,29 +1,13 @@
 import { useState } from 'react';
-import { ShieldAlert, Loader2, AlertTriangle, Droplets, TrendingDown, Skull, ChevronRight, Heart, Truck, Globe2 } from 'lucide-react';
+import { ShieldAlert, Loader2, AlertTriangle, Droplets, TrendingDown, Skull, Heart, Truck, Globe2, ListChecks, CheckCircle2, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const SCENARIOS = [
-  { 
-    id: 'flood', name: 'Flood Disruption', icon: Droplets, color: '#06b6d4',
-    desc: 'Road access collapses by 40%. Infrastructure hazard flag activated across rural sectors.',
-    overrides: { road_access_score: 15, flood_or_disruption_flag: true, last_mile_feasibility_score: 10 }
-  },
-  { 
-    id: 'supply', name: 'Supply Chain Shock', icon: AlertTriangle, color: '#ef4444',
-    desc: 'Resource stock drops dramatically. Expected demand surges across all monitored sectors.',
-    overrides: { current_lpg_stock: 15, expected_refill_demand: 95, recent_supply_drop_percent: 55 }
-  },
-  { 
-    id: 'demand', name: 'Demand Shift', icon: TrendingDown, color: '#f59e0b',
-    desc: 'Urban population migrates to alternative sources. Rural dependency intensifies.',
-    overrides: { urban_induction_shift_percent: 70, rural_lpg_dependency_percent: 95 }
-  },
-  { 
-    id: 'leakage', name: 'Diversion Spike', icon: Skull, color: '#a855f7',
-    desc: 'Black market activity and subsidy diversion risk surges in commercial border zones.',
-    overrides: { black_market_risk_score: 90, diversion_risk_score: 85 }
-  },
+  { id: 'flood', name: 'Flood Disruption', icon: Droplets, color: '#06b6d4', desc: 'Road access collapses by 40%. Infrastructure hazard flag activated across rural sectors.', multiplier: 1.5 },
+  { id: 'supply', name: 'Supply Chain Shock', icon: AlertTriangle, color: '#ef4444', desc: 'Resource stock drops dramatically. Expected demand surges across all monitored sectors.', multiplier: 2.0 },
+  { id: 'demand', name: 'Demand Shift', icon: TrendingDown, color: '#f59e0b', desc: 'Urban population migrates to alternative sources. Rural dependency intensifies.', multiplier: 1.2 },
+  { id: 'leakage', name: 'Diversion Spike', icon: Skull, color: '#a855f7', desc: 'Black market activity and subsidy diversion risk surges in commercial border zones.', multiplier: 1.8 },
 ];
 
 const RESOURCE_FILTERS = [
@@ -34,61 +18,54 @@ const RESOURCE_FILTERS = [
   { label: 'Multi', icon: Globe2, active: false },
 ];
 
-const BASE_DISTRICT = {
-  district_name: 'Simulated Sector',
-  population: 500000,
-  bpl_ratio: 55,
-  vulnerable_household_ratio: 45,
-  hospital_demand_index: 60,
-  current_lpg_stock: 50,
-  expected_refill_demand: 60,
-  road_access_score: 70,
-  flood_or_disruption_flag: false,
-  black_market_risk_score: 20,
-  diversion_risk_score: 15,
-  urban_induction_shift_percent: 20,
-  rural_lpg_dependency_percent: 75,
-  recent_supply_drop_percent: 10,
-  last_mile_feasibility_score: 65
-};
-
 export default function SimulatorPage() {
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const runScenario = async (scenario: typeof SCENARIOS[0]) => {
     setActiveScenario(scenario.id);
     setLoading(true);
     setResult(null);
-    const payload = { ...BASE_DISTRICT, ...scenario.overrides, district_name: `Sim: ${scenario.name}` };
+    setError(null);
+    
     try {
-      const res = await axios.post('http://localhost:8000/analyze-district', payload);
+      const res = await axios.post('http://localhost:8000/simulate-scenario', {
+        scenario_type: scenario.id,
+        severity_multiplier: scenario.multiplier
+      });
       setResult(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.response?.data?.detail || err?.message || "Backend unreachable. Ensure it's running on port 8000.");
     } finally {
       setLoading(false);
     }
   };
 
-  const pieData = result ? [
-    { name: 'Equity', value: result.scores.E, color: '#818cf8' },
-    { name: 'Logistics', value: result.scores.L, color: '#06b6d4' },
-    { name: 'Risk (inv)', value: 100 - result.scores.R, color: '#ef4444' },
-    { name: 'Demand', value: result.scores.D, color: '#f59e0b' },
-  ] : [];
+  const bandCounts = result?.results?.reduce((acc: any, curr: any) => {
+    const band = curr.scores.priority_band;
+    acc[band] = (acc[band] || 0) + 1;
+    return acc;
+  }, {});
+
+  const pieData = bandCounts ? [
+    { name: 'Critical', value: bandCounts['Critical Priority'] || 0, color: '#ef4444' },
+    { name: 'High', value: bandCounts['High Priority'] || 0, color: '#f59e0b' },
+    { name: 'Moderate', value: bandCounts['Moderate Monitoring'] || 0, color: '#06b6d4' },
+    { name: 'Low/Safe', value: (bandCounts['Low Priority / Manual Review'] || 0), color: '#10b981' },
+  ].filter(d => d.value > 0) : [];
 
   return (
-    <div className="p-8 pb-20 max-w-[1600px] mx-auto">
+    <div className="p-8 pb-20 max-w-[1600px] mx-auto font-sans">
       <header className="mb-6 border-b border-cyan-500/10 pb-6">
         <h1 className="text-xl font-black text-white tracking-tight uppercase flex items-center gap-3">
-          <ShieldAlert className="w-5 h-5 text-amber-400" /> War Room — Scenario Simulator
+          <ShieldAlert className="w-5 h-5 text-amber-400" /> War Room — Global Simulation
         </h1>
-        <p className="text-slate-500 text-xs font-semibold mt-1 uppercase tracking-wider">Inject synthetic crisis events and observe real-time multi-agent recalculations.</p>
+        <p className="text-slate-500 text-xs font-semibold mt-1 uppercase tracking-wider">Inject global crisis events and observe multi-district impact & AI executive summary.</p>
       </header>
 
-      {/* Resource filter chips */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {RESOURCE_FILTERS.map((f, i) => (
           <div key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.15em] border cursor-pointer transition-all
@@ -99,15 +76,10 @@ export default function SimulatorPage() {
         ))}
       </div>
       
-      {/* Scenario Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
          {SCENARIOS.map(s => (
-           <button 
-             key={s.id} 
-             onClick={() => runScenario(s)}
-             className={`p-5 rounded-xl text-left transition-all group border relative overflow-hidden ${activeScenario === s.id ? 'border-white/15 bg-white/5 glow-ring' : 'border-white/5 glass-card hover:border-white/10'}`}
-           >
-             {/* Subtle glow */}
+           <button key={s.id} onClick={() => runScenario(s)}
+             className={`p-5 rounded-xl text-left transition-all group border relative overflow-hidden ${activeScenario === s.id ? 'border-white/15 bg-white/5 glow-ring' : 'border-white/5 glass-card hover:border-white/10'}`}>
              {activeScenario === s.id && <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-20" style={{backgroundColor: s.color}} />}
              <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center border group-hover:scale-110 transition-transform" style={{backgroundColor: s.color + '12', borderColor: s.color + '25'}}>
@@ -121,83 +93,131 @@ export default function SimulatorPage() {
          ))}
       </div>
 
-      {/* Results */}
       {loading && (
-        <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center glow-ring">
+        <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center glow-ring min-h-[350px]">
            <div className="relative mb-6">
              <div className="w-16 h-16 border-2 border-cyan-500/20 rounded-full rotate-slow" />
              <div className="absolute inset-2 border-2 border-cyan-400/30 rounded-full rotate-slow" style={{animationDirection:'reverse', animationDuration:'15s'}} />
              <Loader2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400 animate-spin" />
            </div>
-           <p className="font-black text-[10px] tracking-[0.25em] uppercase text-cyan-500/80">Simulating crisis parameters...</p>
+           <p className="font-black text-[10px] tracking-[0.25em] uppercase text-cyan-500/80">Simulating global crisis impacts...</p>
+           <p className="text-[9px] text-slate-500 mt-2 font-medium">Gemini AI is drafting an executive briefing.</p>
         </div>
       )}
 
-      {!result && !loading && (
-        <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center border-dashed border-cyan-500/10 min-h-[280px]">
-           <div className="w-14 h-14 rounded-full border border-white/5 flex items-center justify-center mb-4 bg-white/3">
-             <ShieldAlert className="w-6 h-6 text-slate-700" />
+      {error && !loading && (
+        <div className="glass-card rounded-xl p-8 border border-rose-500/20 bg-rose-500/5 min-h-[200px]">
+           <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
+                <WifiOff className="w-6 h-6 text-rose-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-black text-rose-400 uppercase tracking-wider mb-2">Simulation Failed</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed mb-4">{error}</p>
+                {activeScenario && (
+                  <button onClick={() => { const s = SCENARIOS.find(x => x.id === activeScenario); if(s) runScenario(s); }}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-cyan-400 bg-cyan-500/10 px-4 py-2 rounded-lg border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors">
+                     <RefreshCw className="w-3.5 h-3.5" /> Retry Simulation
+                  </button>
+                )}
+              </div>
            </div>
-           <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Select a scenario above</p>
-           <p className="text-[10px] text-slate-700 mt-1 font-medium">The AI Council will recalculate allocation priorities in real-time.</p>
+        </div>
+      )}
+
+      {!result && !loading && !error && (
+        <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center border-dashed border-cyan-500/10 min-h-[350px]">
+           <div className="w-14 h-14 rounded-full border border-white/5 flex items-center justify-center mb-4 bg-white/3">
+             <Globe2 className="w-6 h-6 text-slate-700" />
+           </div>
+           <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Select a global shock scenario</p>
+           <p className="text-[10px] text-slate-700 mt-1 font-medium text-center max-w-sm">The AI Council will simulate the impact across all sectors and provide a strategic commander briefing.</p>
         </div>
       )}
 
       {result && !loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Score Summary */}
-          <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden glow-ring">
-            <div className={`px-6 py-4 border-b flex justify-between items-center ${result.scores.priority_score >= 80 ? 'bg-rose-500/8 border-rose-500/15' : result.scores.priority_score >= 65 ? 'bg-amber-500/8 border-amber-500/15' : 'bg-cyan-500/5 border-cyan-500/10'}`}>
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600">Simulation Result</p>
-                <p className={`font-black text-sm mt-0.5 uppercase ${result.scores.priority_score >= 80 ? 'text-rose-400' : result.scores.priority_score >= 65 ? 'text-amber-400' : 'text-cyan-400'}`}>{result.scores.priority_band}</p>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 glass-card rounded-xl overflow-hidden glow-ring flex flex-col">
+            <div className="bg-rose-500/10 border-b border-rose-500/20 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-rose-400" />
+                <div>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Gemini AI • Commander Briefing</h2>
+                  <p className="text-white font-bold text-sm uppercase tracking-wider">{activeScenario} Protocol Initiated</p>
+                </div>
               </div>
               <div className="text-right">
-                <span className={`text-4xl font-black tracking-tighter ${result.scores.priority_score >= 80 ? 'text-rose-400' : result.scores.priority_score >= 65 ? 'text-amber-400' : 'text-cyan-400'}`}>
-                  {result.scores.priority_score.toFixed(0)}
-                </span>
-                <span className="text-slate-600 font-semibold ml-1 text-sm">/ 100</span>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Sectors Affected</p>
+                <p className="text-2xl font-black text-white">{result.districts_affected}</p>
               </div>
             </div>
-            <div className="p-6">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 mb-2">Recommended Action</p>
-              <div className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold px-4 py-3 text-xs rounded-lg mb-4 uppercase tracking-wider">
-                {result.scores.recommendation}
+            <div className="p-6 flex-1 flex flex-col">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-3">Strategic Overview</p>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-slate-300 text-sm leading-relaxed italic font-medium flex-1">
+                "{result.ai_summary}"
               </div>
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 mb-2">Moderator Analysis</p>
-              <p className="text-sm text-slate-400 font-medium leading-relaxed bg-white/3 p-4 rounded-lg border border-white/5 italic">
-                "{result.agents.moderator_agent}"
-              </p>
             </div>
           </div>
 
-          {/* Pie Chart */}
           <div className="glass-card rounded-xl p-6 flex flex-col items-center glow-ring">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 self-start">Agent Distribution</h3>
-            <div className="w-48 h-48 relative">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 self-start flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-slate-600" /> Sector Threat Levels
+            </h3>
+            <div className="w-48 h-48 relative mb-6">
               <div className="absolute inset-[-4px] border border-cyan-500/10 rounded-full rotate-slow" />
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none" animationDuration={900}>
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                  <Pie data={pieData} innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none" animationDuration={900}>
+                    {pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: '#0a1020', border: '1px solid rgba(6,182,212,0.15)', borderRadius: '10px', color: '#fff', fontSize: '11px' }} />
+                  <Tooltip contentStyle={{ background: '#0a1020', border: '1px solid rgba(6,182,212,0.15)', borderRadius: '8px', color: '#fff', fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                 <span className="text-2xl font-black text-white">{result.districts_affected}</span>
+                 <span className="text-[8px] font-bold uppercase tracking-widest text-slate-500">Total</span>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4 w-full">
+            <div className="grid grid-cols-2 gap-2 w-full">
               {pieData.map((d, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white/3 rounded-lg p-2 border border-white/5">
-                  <div className="w-2.5 h-2.5 rounded" style={{backgroundColor: d.color}} />
+                <div key={i} className="flex items-center gap-2 bg-white/3 rounded-lg p-2.5 border border-white/5">
+                  <div className="w-2.5 h-2.5 rounded shadow-lg" style={{backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}60`}} />
                   <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{d.name}</p>
-                    <p className="text-sm font-black text-white">{d.value.toFixed(0)}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{d.name}</p>
+                    <p className="text-sm font-black text-white">{d.value}</p>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="xl:col-span-3 glass-card rounded-xl p-6 glow-ring">
+             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Critical Sector Rollcall</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+               {result.results
+                 .sort((a: any, b: any) => b.scores.priority_score - a.scores.priority_score)
+                 .slice(0, 9)
+                 .map((dist: any, idx: number) => (
+                   <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-4 flex items-center justify-between hover:bg-white/10 transition-colors">
+                     <div>
+                       <p className="text-xs font-bold text-white flex items-center gap-2">
+                         {dist.scores.priority_score >= 80 && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
+                         {dist.district_name}
+                       </p>
+                       <p className={`text-[9px] font-black mt-1 uppercase tracking-wider ${dist.scores.priority_score >= 80 ? 'text-rose-400' : dist.scores.priority_score >= 65 ? 'text-amber-400' : 'text-cyan-400'}`}>
+                         {dist.scores.priority_band}
+                       </p>
+                     </div>
+                     <div className="text-right">
+                       <span className="text-lg font-black text-white">{dist.scores.priority_score.toFixed(0)}</span>
+                       <span className="text-[9px] text-slate-500 font-bold ml-0.5">/100</span>
+                     </div>
+                   </div>
+               ))}
+             </div>
+             {result.results.length > 9 && (
+               <p className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-4">+ {result.results.length - 9} More Sectors</p>
+             )}
           </div>
         </div>
       )}
