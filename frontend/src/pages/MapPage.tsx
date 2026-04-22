@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Map as MapIcon, AlertTriangle } from 'lucide-react';
+import { Map as MapIcon } from 'lucide-react';
 
 const DISTRICTS_GEO = [
   { id: 'demo-1', name: 'Metro-Rural Periphery', x: 52, y: 38, band: 'High', pop: '1.2M' },
